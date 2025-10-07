@@ -1,0 +1,22 @@
+{
+  "name": "dev-tinder-backend",
+  "version": "1.0.0",
+  "description": "tinder for the developers",
+  "keywords": [
+    "nodejs",
+    "javascript",
+    "backend"
+  ],
+  "license": "ISC",
+  "author": "Rushabh Dave",
+  "type": "commonjs",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon app.js",
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
