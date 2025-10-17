@@ -26,7 +26,7 @@ app.post("/sign-up", async (req, res) => {
     res.status(201).send("User created successfully");
   } catch (error) {
     console.log(error, "error");
-    res.status(500).send("Error creating user");
+    res.status(500).send(`Error creating user => ${error.message}`);
   }
 });
 
@@ -42,7 +42,7 @@ app.get("/user", async (req, res) => {
     }
   } catch (error) {
     console.error(error, "error");
-    res.status(500).send("Error fetching users");
+    res.status(500).send(`Error fetching users => ${error.message}`);
   }
 });
 
@@ -52,7 +52,7 @@ app.get("/feed", async (req, res) => {
     res.status(200).json(users);
   } catch (error) {
     console.log(error, "error");
-    res.status(500).send("Error fetching feed");
+    res.status(500).send(`Error fetching feed => ${error.message}`);
   }
 });
 
@@ -69,7 +69,7 @@ app.delete("/user", async (req, res) => {
     res.status(200).send("User deleted successfully");
   } catch (error) {
     console.log(error, "error");
-    res.status(500).send("Error deleting user");
+    res.status(500).send(`Error deleting user => ${error.message}`);
   }
 });
 
@@ -83,6 +83,7 @@ app.patch("/user", async (req, res) => {
       updatedData,
       {
         new: true,
+        runValidators: true,
       }
     );
 
@@ -93,6 +94,6 @@ app.patch("/user", async (req, res) => {
     }
   } catch (error) {
     console.log(error, "error");
-    res.status(500).send("Error updating user");
+    res.status(500).send(`Error updating user => ${error.message}`);
   }
 });
