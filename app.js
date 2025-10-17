@@ -22,10 +22,29 @@ app.post("/sign-up", async (req, res) => {
   const newUser = new userModel(dummyUser);
 
   try {
+    const MANDATORY_FIELDS = [
+      "firstName",
+      "lastName",
+      "emailId",
+      "password",
+      "age",
+      "gender",
+    ];
+
+    const isAllMandatoryFieldsPresent = MANDATORY_FIELDS.every((item) =>
+      Object.keys(dummyUser).includes(item)
+    );
+
+    if (!isAllMandatoryFieldsPresent) {
+      return res
+        .status(400)
+        .send(`All mandatory fields are required => ${MANDATORY_FIELDS}`);
+    }
+
     await newUser.save();
     res.status(201).send("User created successfully");
   } catch (error) {
-    console.log(error, "error");
+    console.error(error, "error creating user");
     res.status(500).send(`Error creating user => ${error.message}`);
   }
 });
@@ -51,7 +70,7 @@ app.get("/feed", async (req, res) => {
     const users = await userModel.find({});
     res.status(200).json(users);
   } catch (error) {
-    console.log(error, "error");
+    console.error(error, "error fetching feed");
     res.status(500).send(`Error fetching feed => ${error.message}`);
   }
 });
@@ -68,16 +87,35 @@ app.delete("/user", async (req, res) => {
 
     res.status(200).send("User deleted successfully");
   } catch (error) {
-    console.log(error, "error");
+    console.error(error, "error deleting user");
     res.status(500).send(`Error deleting user => ${error.message}`);
   }
 });
 
-app.patch("/user", async (req, res) => {
+app.patch("/user/:userId", async (req, res) => {
   try {
-    const { userId, updatedData } = req.body;
+    const userId = req.params?.userId || null;
 
-    console.log(userId, updatedData, "userId, updatedData");
+    if (!userId) {
+      return res.status(400).send("User ID is required in params");
+    }
+
+    const updatedData = req.body;
+
+    const ALLOWED_UPDATES = ["photoURL", "about", "skills"];
+    const requestedUpdates = Object.keys(updatedData);
+    const isValidOperation = requestedUpdates.every((update) =>
+      ALLOWED_UPDATES.includes(update)
+    );
+
+    if (!isValidOperation) {
+      return res
+        .status(400)
+        .send(
+          `Invalid updates! => only ${ALLOWED_UPDATES} are allowed to update`
+        );
+    }
+
     const updatedUser = await userModel.findByIdAndUpdate(
       { _id: userId },
       updatedData,
@@ -93,7 +131,7 @@ app.patch("/user", async (req, res) => {
       return res.status(200).json(updatedUser);
     }
   } catch (error) {
-    console.log(error, "error");
+    console.error(error, "error updating user");
     res.status(500).send(`Error updating user => ${error.message}`);
   }
 });
