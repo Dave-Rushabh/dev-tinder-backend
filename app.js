@@ -6,9 +6,15 @@ const userModel = require("./src/models/user");
 const {
   validateSignUpData,
   validateSignInData,
+  isTokenValid,
 } = require("./src/utils/validations");
 app.use(express.json());
 const bcrypt = require("bcrypt");
+const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
+const { userAuth } = require("./src/middlewares/authMiddleware");
+
+app.use(cookieParser());
 
 connectToDatabase()
   .then(() => {
@@ -53,7 +59,42 @@ app.post("/sign-up", async (req, res) => {
   }
 });
 
-app.get("/user", async (req, res) => {
+app.post("/sign-in", async (req, res) => {
+  try {
+    const { emailId, password } = req.body;
+    const { isValid, error, isUserExist } = await validateSignInData({
+      emailId,
+      password,
+    });
+    if (!isValid) {
+      return res.status(400).send(error);
+    } else {
+      /**
+       * create a JWT token
+       * Add the token to cookie
+       * Send the response back to the user
+       */
+
+      const token = await jwt.sign(
+        { _id: isUserExist._id },
+        process.env.JWT_SECRET,
+        {
+          expiresIn: "1h",
+        }
+      );
+      res.cookie("token", token, {
+        httpOnly: true,
+        maxAge: 3600000, // 1 hour
+      });
+      res.status(200).send("User signed in successfully");
+    }
+  } catch (error) {
+    console.error(error, "error logging in user");
+    res.status(500).send(`Error logging in user => ${error.message}`);
+  }
+});
+
+app.get("/user", userAuth, async (req, res) => {
   try {
     const { emailId } = req.body;
     const user = await userModel.findOne({ emailId });
@@ -69,17 +110,7 @@ app.get("/user", async (req, res) => {
   }
 });
 
-app.get("/feed", async (req, res) => {
-  try {
-    const users = await userModel.find({});
-    res.status(200).json(users);
-  } catch (error) {
-    console.error(error, "error fetching feed");
-    res.status(500).send(`Error fetching feed => ${error.message}`);
-  }
-});
-
-app.delete("/user", async (req, res) => {
+app.delete("/user", userAuth, async (req, res) => {
   try {
     const { userId } = req.body;
 
@@ -96,7 +127,7 @@ app.delete("/user", async (req, res) => {
   }
 });
 
-app.patch("/user/:userId", async (req, res) => {
+app.patch("/user/:userId", userAuth, async (req, res) => {
   try {
     const userId = req.params?.userId || null;
 
@@ -140,17 +171,28 @@ app.patch("/user/:userId", async (req, res) => {
   }
 });
 
-app.post("/sign-in", async (req, res) => {
+app.get("/feed", userAuth, async (req, res) => {
   try {
-    const { emailId, password } = req.body;
-    const { isValid, error } = await validateSignInData({ emailId, password });
-    if (!isValid) {
-      return res.status(400).send(error);
-    } else {
-      res.status(200).send("User signed in successfully");
-    }
+    const users = await userModel.find({});
+    res.status(200).json(users);
   } catch (error) {
-    console.error(error, "error logging in user");
-    res.status(500).send(`Error logging in user => ${error.message}`);
+    console.error(error, "error fetching feed");
+    res.status(500).send(`Error fetching feed => ${error.message}`);
+  }
+});
+
+app.get("/profile", userAuth, async (req, res) => {
+  try {
+    const { _id } = req.user;
+
+    const user = await userModel.findById(_id);
+    if (!user) {
+      return res.status(404).send("User not found");
+    }
+
+    res.status(200).json(user);
+  } catch (error) {
+    console.error(error, "error fetching user profile");
+    res.status(500).send(`Error fetching user profile => ${error.message}`);
   }
 });

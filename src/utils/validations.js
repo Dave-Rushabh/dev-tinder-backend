@@ -1,6 +1,7 @@
 const validator = require("validator");
 const userModel = require("../models/user");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 const validateSignUpData = (data) => {
   const MANDATORY_FIELDS = [
@@ -71,10 +72,20 @@ const validateSignInData = async (data) => {
     };
   }
 
-  return { isValid: true };
+  return { isValid: true, isUserExist };
+};
+
+const isTokenValid = async (token) => {
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    return { isValid: true, decoded };
+  } catch (error) {
+    throw new Error("Authentication failed: " + error.message);
+  }
 };
 
 module.exports = {
   validateSignUpData,
   validateSignInData,
+  isTokenValid,
 };
