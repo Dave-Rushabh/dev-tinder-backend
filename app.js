@@ -3,7 +3,12 @@ const connectToDatabase = require("./src/config/database");
 const app = express();
 require("dotenv").config();
 const userModel = require("./src/models/user");
+const {
+  validateSignUpData,
+  validateSignInData,
+} = require("./src/utils/validations");
 app.use(express.json());
+const bcrypt = require("bcrypt");
 
 connectToDatabase()
   .then(() => {
@@ -19,27 +24,26 @@ connectToDatabase()
 
 app.post("/sign-up", async (req, res) => {
   const dummyUser = req.body;
-  const newUser = new userModel(dummyUser);
 
   try {
-    const MANDATORY_FIELDS = [
-      "firstName",
-      "lastName",
-      "emailId",
-      "password",
-      "age",
-      "gender",
-    ];
-
-    const isAllMandatoryFieldsPresent = MANDATORY_FIELDS.every((item) =>
-      Object.keys(dummyUser).includes(item)
-    );
-
-    if (!isAllMandatoryFieldsPresent) {
-      return res
-        .status(400)
-        .send(`All mandatory fields are required => ${MANDATORY_FIELDS}`);
+    // validation of the data
+    const { isValid, error } = validateSignUpData(req.body);
+    if (!isValid) {
+      return res.status(400).send(error);
     }
+
+    // Encrypt the password
+    const hashedPassword = await bcrypt.hash(dummyUser.password, 10);
+
+    // Save the user to the database
+    const newUser = new userModel({
+      firstName: dummyUser.firstName,
+      lastName: dummyUser.lastName,
+      emailId: dummyUser.emailId,
+      password: hashedPassword,
+      age: dummyUser.age,
+      gender: dummyUser.gender,
+    });
 
     await newUser.save();
     res.status(201).send("User created successfully");
@@ -133,5 +137,20 @@ app.patch("/user/:userId", async (req, res) => {
   } catch (error) {
     console.error(error, "error updating user");
     res.status(500).send(`Error updating user => ${error.message}`);
+  }
+});
+
+app.post("/sign-in", async (req, res) => {
+  try {
+    const { emailId, password } = req.body;
+    const { isValid, error } = await validateSignInData({ emailId, password });
+    if (!isValid) {
+      return res.status(400).send(error);
+    } else {
+      res.status(200).send("User signed in successfully");
+    }
+  } catch (error) {
+    console.error(error, "error logging in user");
+    res.status(500).send(`Error logging in user => ${error.message}`);
   }
 });
