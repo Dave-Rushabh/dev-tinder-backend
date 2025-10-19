@@ -62,7 +62,11 @@ app.post("/sign-up", async (req, res) => {
 app.post("/sign-in", async (req, res) => {
   try {
     const { emailId, password } = req.body;
-    const { isValid, error, isUserExist } = await validateSignInData({
+    const {
+      isValid,
+      error,
+      isUserExist: user,
+    } = await validateSignInData({
       emailId,
       password,
     });
@@ -75,13 +79,7 @@ app.post("/sign-in", async (req, res) => {
        * Send the response back to the user
        */
 
-      const token = await jwt.sign(
-        { _id: isUserExist._id },
-        process.env.JWT_SECRET,
-        {
-          expiresIn: "1h",
-        }
-      );
+      const token = await user.getJWTToken();
       res.cookie("token", token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
