@@ -4,9 +4,8 @@
  * find the user associated with the token
  */
 
-const { isTokenValid } = require("../utils/validations");
-const jwt = require("jsonwebtoken");
-const userModel = require("../models/user");
+import userModel from "../models/user.js";
+import { isTokenValid } from "../utils/validations.js";
 
 const userAuth = async (req, res, next) => {
   try {
@@ -33,6 +32,4 @@ const userAuth = async (req, res, next) => {
   }
 };
 
-module.exports = {
-  userAuth,
-};
+export { userAuth };

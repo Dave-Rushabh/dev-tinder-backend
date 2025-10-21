@@ -1,7 +1,7 @@
-const validator = require("validator");
-const userModel = require("../models/user");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
+import validator from "validator";
+import userModel from "../models/user.js";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 const validateSignUpData = (data) => {
   const MANDATORY_FIELDS = [
@@ -84,8 +84,4 @@ const isTokenValid = async (token) => {
   }
 };
 
-module.exports = {
-  validateSignUpData,
-  validateSignInData,
-  isTokenValid,
-};
+export { validateSignUpData, validateSignInData, isTokenValid };

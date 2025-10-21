@@ -1,6 +1,6 @@
-const mongoose = require("mongoose");
-const validator = require("validator");
-const jwt = require("jsonwebtoken");
+import mongoose from "mongoose";
+import validator from "validator";
+import jwt from "jsonwebtoken";
 
 const userSchema = new mongoose.Schema(
   {
@@ -91,4 +91,4 @@ userSchema.methods.getJWTToken = async function () {
 };
 
 const userModel = mongoose.model("User", userSchema);
-module.exports = userModel;
+export default userModel;
