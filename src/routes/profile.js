@@ -1,9 +1,12 @@
 import express from "express";
 import { userAuth } from "../middlewares/authMiddleware.js";
+import userModel from "../models/user.js";
 
 const profileRouter = express.Router();
 
-profileRouter.get("/profile", userAuth, async (req, res) => {
+profileRouter.use(userAuth);
+
+profileRouter.get("/", async (req, res) => {
   try {
     const { _id } = req.user;
 
@@ -19,7 +22,7 @@ profileRouter.get("/profile", userAuth, async (req, res) => {
   }
 });
 
-profileRouter.get("/user", userAuth, async (req, res) => {
+profileRouter.get("/user", async (req, res) => {
   try {
     const { emailId } = req.body;
     const user = await userModel.findOne({ emailId });
@@ -35,7 +38,7 @@ profileRouter.get("/user", userAuth, async (req, res) => {
   }
 });
 
-profileRouter.delete("/user", userAuth, async (req, res) => {
+profileRouter.delete("/user", async (req, res) => {
   try {
     const { userId } = req.body;
 
@@ -52,7 +55,7 @@ profileRouter.delete("/user", userAuth, async (req, res) => {
   }
 });
 
-profileRouter.patch("/user/:userId", userAuth, async (req, res) => {
+profileRouter.patch("/user/:userId", async (req, res) => {
   try {
     const userId = req.params?.userId || null;
 

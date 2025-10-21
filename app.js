@@ -26,6 +26,6 @@ connectToDatabase()
   });
 
 app.use("/api/auth", authRouter);
-app.use("/api/connections/request", connectionsRouter);
 app.use("/api/profile", profileRouter);
+app.use("/api/connections/request", connectionsRouter);
 app.use("/api/feed", feedRouter);
