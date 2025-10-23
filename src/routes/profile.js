@@ -6,11 +6,10 @@ const profileRouter = express.Router();
 
 profileRouter.use(userAuth);
 
-profileRouter.get("/", async (req, res) => {
+profileRouter.get("/view", async (req, res) => {
   try {
-    const { _id } = req.user;
+    const user = req.user;
 
-    const user = await userModel.findById(_id);
     if (!user) {
       return res.status(404).send("User not found");
     }
@@ -22,51 +21,18 @@ profileRouter.get("/", async (req, res) => {
   }
 });
 
-profileRouter.get("/user", async (req, res) => {
+profileRouter.patch("/edit", async (req, res) => {
   try {
-    const { emailId } = req.body;
-    const user = await userModel.findOne({ emailId });
+    const user = req.user;
 
     if (!user) {
-      return res.status(404).send("User not found");
-    } else {
-      res.status(200).json(user);
-    }
-  } catch (error) {
-    console.error(error, "error");
-    res.status(500).send(`Error fetching users => ${error.message}`);
-  }
-});
-
-profileRouter.delete("/user", async (req, res) => {
-  try {
-    const { userId } = req.body;
-
-    const deletedUser = await userModel.findByIdAndDelete(userId);
-
-    if (!deletedUser) {
-      return res.status(404).send("User not found");
+      throw new Error("User not found");
     }
 
-    res.status(200).send("User deleted successfully");
-  } catch (error) {
-    console.error(error, "error deleting user");
-    res.status(500).send(`Error deleting user => ${error.message}`);
-  }
-});
-
-profileRouter.patch("/user/:userId", async (req, res) => {
-  try {
-    const userId = req.params?.userId || null;
-
-    if (!userId) {
-      return res.status(400).send("User ID is required in params");
-    }
-
-    const updatedData = req.body;
+    const dataToBeUpdated = req.body;
 
     const ALLOWED_UPDATES = ["photoURL", "about", "skills"];
-    const requestedUpdates = Object.keys(updatedData);
+    const requestedUpdates = Object.keys(dataToBeUpdated);
     const isValidOperation = requestedUpdates.every((update) =>
       ALLOWED_UPDATES.includes(update)
     );
@@ -80,22 +46,19 @@ profileRouter.patch("/user/:userId", async (req, res) => {
     }
 
     const updatedUser = await userModel.findByIdAndUpdate(
-      { _id: userId },
-      updatedData,
-      {
-        new: true,
-        runValidators: true,
-      }
+      user._id,
+      dataToBeUpdated,
+      { new: true, runValidators: true }
     );
 
     if (!updatedUser) {
-      return res.status(404).send("User not found");
-    } else {
-      return res.status(200).json(updatedUser);
+      throw new Error("Error updating user profile");
     }
+
+    res.status(200).json(updatedUser);
   } catch (error) {
-    console.error(error, "error updating user");
-    res.status(500).send(`Error updating user => ${error.message}`);
+    console.error(error, "error updating user profile");
+    res.status(500).send(`Error updating user profile => ${error.message}`);
   }
 });
 

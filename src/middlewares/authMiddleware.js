@@ -11,12 +11,12 @@ const userAuth = async (req, res, next) => {
   try {
     const token = req.cookies.token;
     if (!token) {
-      return res.status(401).send("Unauthorized");
+      throw new Error("You are not authorized to access this resource");
     }
 
     const { isValid, decoded } = await isTokenValid(token);
     if (!isValid) {
-      return res.status(401).send("Unauthorized");
+      throw new Error("You are not authorized to access this resource");
     }
 
     const user = await userModel.findById(decoded._id);

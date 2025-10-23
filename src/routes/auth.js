@@ -1,11 +1,13 @@
-import express from "express";
-import {
-  validateSignUpData,
-  validateSignInData,
-} from "../utils/validations.js";
 import bcrypt from "bcrypt";
+import express from "express";
+import validator from "validator";
+import otpModel from "../models/otp.js";
 import userModel from "../models/user.js";
-
+import { sendOtpEmail } from "../utils/email.js";
+import {
+  validateSignInData,
+  validateSignUpData,
+} from "../utils/validations.js";
 const authRouter = express.Router();
 
 authRouter.post("/sign-up", async (req, res) => {
@@ -75,9 +77,87 @@ authRouter.post("/login", async (req, res) => {
 
 authRouter.post("/logout", async (req, res) => {
   try {
+    const token = req.cookies.token;
+    if (!token) {
+      throw new Error("please log in first");
+    }
+
+    res.clearCookie("token");
+    res.status(200).send("User logged out successfully");
   } catch (error) {
     console.error(error, "error logging out user");
     res.status(500).send(`Error logging out user => ${error.message}`);
+  }
+});
+
+authRouter.post("/forgot-password", async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    // generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000);
+
+    const hashedOtp = await bcrypt.hash(otp.toString(), 10);
+
+    // delete the previous stored OTP for given email address
+    await otpModel.deleteMany({ email });
+
+    const savedOtp = await otpModel.create({
+      email,
+      otp: hashedOtp,
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000), // expires in 5 minutes
+    });
+
+    if (!savedOtp) {
+      throw new Error("Could not send OTP, please try again");
+    }
+
+    // send OTP via email
+    await sendOtpEmail(email, otp);
+
+    res.status(200).json({ message: "OTP sent to your email address" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send(`Error sending OTP => ${error.message}`);
+  }
+});
+
+authRouter.post("/verify-otp", async (req, res) => {
+  try {
+    const { email, otp, password: newPasswordFromUser } = req.body;
+
+    const storedOtpEntry = await otpModel.findOne({ email });
+    if (!storedOtpEntry) {
+      throw new Error("something went wrong, please request a new OTP");
+    }
+
+    const isOtpValid = await bcrypt.compare(otp, storedOtpEntry.otp);
+    if (!isOtpValid) {
+      throw new Error("Invalid OTP");
+    }
+
+    if (storedOtpEntry.expiresAt < new Date()) {
+      throw new Error("OTP has expired, please request a new one");
+    }
+
+    // check if the password is strong or not
+    if (!validator.isStrongPassword(newPasswordFromUser)) {
+      throw new Error("Password must be strong");
+    }
+
+    // OTP is valid, proceed with password reset
+    const hashedPassword = await bcrypt.hash(newPasswordFromUser, 10);
+    await userModel.updateOne(
+      { emailId: email },
+      { password: hashedPassword },
+      { runValidators: true }
+    );
+    await otpModel.deleteMany({ email });
+
+    res.status(200).send("Password reset successfully");
+  } catch (error) {
+    console.error(error, "error verifying OTP");
+    res.status(500).send(`Error verifying OTP => ${error.message}`);
   }
 });
 
