@@ -1,6 +1,7 @@
 import express from "express";
 import { userAuth } from "../middlewares/authMiddleware.js";
 import userModel from "../models/user.js";
+import connectionRequestModel from "../models/connectionRequest.js";
 
 const profileRouter = express.Router();
 
@@ -59,6 +60,25 @@ profileRouter.patch("/edit", async (req, res) => {
   } catch (error) {
     console.error(error, "error updating user profile");
     res.status(500).send(`Error updating user profile => ${error.message}`);
+  }
+});
+
+profileRouter.get("/connections/received-requests", async (req, res) => {
+  try {
+    const user = req.user;
+
+    // get the list of connection requests received by the user
+
+    const receivedRequests = await connectionRequestModel.find({
+      $and: [{ toUserId: user._id }, { status: "interested" }],
+    });
+
+    res.status(200).json(receivedRequests);
+  } catch (error) {
+    console.error(error, "error fetching received connection requests");
+    res
+      .status(500)
+      .send(`Error fetching received connection requests => ${error.message}`);
   }
 });
 

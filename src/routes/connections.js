@@ -83,4 +83,46 @@ connectionsRouter.post("/send/:status/:userId", async (req, res) => {
   }
 });
 
+connectionsRouter.patch("/review/:status/:requestId", async (req, res) => {
+  try {
+    const { status, requestId } = req.params;
+
+    /**
+     * check request Id & expected status
+     */
+
+    const EXPECTED_STATUSES = ["accepted", "rejected"];
+
+    const currentRequest = await connectionRequestModel.findOne({
+      _id: requestId,
+      toUserId: req.user._id,
+      status: "interested",
+    });
+
+    console.log({ currentRequest });
+
+    if (!EXPECTED_STATUSES.includes(status) || !currentRequest) {
+      return res.status(404).send("Connection request not found");
+    }
+
+    const updatedRequest = await connectionRequestModel.findByIdAndUpdate(
+      requestId,
+      { status },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedRequest) {
+      res.status(400).send("something went wrong while making the request");
+    }
+
+    res.status(200).json({
+      message: "request processed successfully !",
+      data: updatedRequest,
+    });
+  } catch (error) {
+    console.error(error, "error in reviewing the request");
+    res.status(500).send(`Error in reviewing the request : ${error.message}`);
+  }
+});
+
 export { connectionsRouter };
