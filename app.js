@@ -1,11 +1,11 @@
+import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import express from "express";
 import connectToDatabase from "./src/config/database.js";
-import cookieParser from "cookie-parser";
 import { authRouter } from "./src/routes/auth.js";
 import { connectionsRouter } from "./src/routes/connections.js";
-import { profileRouter } from "./src/routes/profile.js";
 import { feedRouter } from "./src/routes/feed.js";
+import { profileRouter } from "./src/routes/profile.js";
 
 const app = express();
 dotenv.config();
