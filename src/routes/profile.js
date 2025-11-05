@@ -92,4 +92,61 @@ profileRouter.get("/connections/received-requests", async (req, res) => {
   }
 });
 
+profileRouter.get("/my-connections", async (req, res) => {
+  try {
+    const loggedInUser = req.user;
+
+    const connections = await connectionRequestModel
+      .find({
+        $or: [
+          { toUserId: loggedInUser._id, status: "accepted" },
+          { fromUserId: loggedInUser._id, status: "accepted" },
+        ],
+      })
+      .populate("fromUserId", [
+        "firstName",
+        "lastName",
+        "age",
+        "gender",
+        "photoURL",
+        "about",
+        "skills",
+      ])
+      .populate("toUserId", [
+        "firstName",
+        "lastName",
+        "age",
+        "gender",
+        "photoURL",
+        "about",
+        "skills",
+      ]);
+
+    const modifiedConnections = connections.map((connection) => {
+      const isLoggedInUserPresentInToUserId = connection.toUserId._id.equals(
+        loggedInUser._id
+      );
+
+      let connectionInfo = {};
+      const conn = connection.toObject();
+
+      if (isLoggedInUserPresentInToUserId) {
+        connectionInfo = connection.fromUserId;
+      } else {
+        connectionInfo = connection.toUserId;
+      }
+
+      delete conn.fromUserId;
+      delete conn.toUserId;
+
+      return { ...conn, connectionInfo };
+    });
+
+    return res.status(200).json(modifiedConnections);
+  } catch (error) {
+    console.error(error, "Error fetching the connections");
+    res.status(400).send(`Error fetching the connections => ${error.message}`);
+  }
+});
+
 export { profileRouter };
