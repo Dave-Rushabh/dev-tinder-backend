@@ -99,8 +99,6 @@ connectionsRouter.patch("/review/:status/:requestId", async (req, res) => {
       status: "interested",
     });
 
-    console.log({ currentRequest });
-
     if (!EXPECTED_STATUSES.includes(status) || !currentRequest) {
       return res.status(404).send("Connection request not found");
     }
