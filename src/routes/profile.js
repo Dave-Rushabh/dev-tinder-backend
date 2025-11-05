@@ -69,9 +69,19 @@ profileRouter.get("/connections/received-requests", async (req, res) => {
 
     // get the list of connection requests received by the user
 
-    const receivedRequests = await connectionRequestModel.find({
-      $and: [{ toUserId: user._id }, { status: "interested" }],
-    });
+    const receivedRequests = await connectionRequestModel
+      .find({
+        $and: [{ toUserId: user._id }, { status: "interested" }],
+      })
+      .populate("fromUserId", [
+        "firstName",
+        "lastName",
+        "age",
+        "gender",
+        "photoURL",
+        "about",
+        "skills",
+      ]);
 
     res.status(200).json(receivedRequests);
   } catch (error) {
