@@ -34,7 +34,10 @@ authRouter.post("/sign-up", async (req, res) => {
     });
 
     await newUser.save();
-    res.status(201).send("User created successfully");
+    res.status(201).json({
+      message: "Sign Up Successful !",
+      data: newUser,
+    });
   } catch (error) {
     console.error(error, "error creating user");
     res.status(500).send(`Error creating user => ${error.message}`);
@@ -67,7 +70,10 @@ authRouter.post("/login", async (req, res) => {
         secure: process.env.NODE_ENV === "production",
         maxAge: 3600000, // 1 hour in milliseconds
       });
-      res.status(200).send("User signed in successfully");
+      res.status(200).json({
+        message: "Login successful",
+        data: user,
+      });
     }
   } catch (error) {
     console.error(error, "error logging in user");
