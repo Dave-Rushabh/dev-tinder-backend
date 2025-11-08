@@ -20,7 +20,10 @@ const userSchema = new mongoose.Schema(
     },
     emailId: {
       type: String,
-      unique: [true, "Email ID is already registered, use another email ID"],
+      unique: [
+        true,
+        "Email ID is already registered, use another email ID to sign up",
+      ],
       required: [true, "Email ID is required"],
       lowercase: [true, "Email ID must be in lowercase"],
       trim: true,

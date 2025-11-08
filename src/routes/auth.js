@@ -40,7 +40,7 @@ authRouter.post("/sign-up", async (req, res) => {
     });
   } catch (error) {
     console.error(error, "error creating user");
-    res.status(500).send(`Error creating user => ${error.message}`);
+    res.status(500).send(`${error.message}`);
   }
 });
 
