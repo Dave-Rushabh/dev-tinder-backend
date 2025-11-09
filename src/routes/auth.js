@@ -83,11 +83,6 @@ authRouter.post("/login", async (req, res) => {
 
 authRouter.post("/logout", async (req, res) => {
   try {
-    const token = req.cookies.token;
-    if (!token) {
-      throw new Error("please log in first");
-    }
-
     res.clearCookie("token");
     res.status(200).send("User logged out successfully");
   } catch (error) {
