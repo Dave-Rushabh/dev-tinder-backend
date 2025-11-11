@@ -35,6 +35,24 @@ feedRouter.get("/", userAuth, async (req, res) => {
       notToBeDisplayedUsers.add(connection.toUserId.toString());
     });
 
+    const totalUsers = await userModel
+      .find({
+        $and: [
+          { _id: { $nin: Array.from(notToBeDisplayedUsers) } },
+          { _id: { $ne: loggedInUser._id } },
+        ],
+      })
+      .select([
+        "firstName",
+        "lastName",
+        "age",
+        "gender",
+        "photoURL",
+        "about",
+        "skills",
+      ])
+      .countDocuments();
+
     const users = await userModel
       .find({
         $and: [
@@ -52,9 +70,10 @@ feedRouter.get("/", userAuth, async (req, res) => {
         "skills",
       ])
       .skip(skip)
-      .limit(limit);
+      .limit(limit)
+      .sort({ createdAt: -1 });
 
-    res.status(200).json(users);
+    res.status(200).json({ users, totalUsers });
   } catch (error) {
     console.error(error, "error fetching feed");
     res.status(500).send(`Error fetching feed => ${error.message}`);
