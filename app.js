@@ -12,7 +12,13 @@ const app = express();
 dotenv.config();
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: [
+      "http://localhost:5173",
+      "http://lazy-dev-tinder.co.in",
+      "https://lazy-dev-tinder.co.in",
+      "http://13.53.46.55",
+      "https://13.53.46.55",
+    ],
     credentials: true,
   })
 );
